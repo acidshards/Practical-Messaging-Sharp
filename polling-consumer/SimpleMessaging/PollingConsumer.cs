@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace SimpleMessaging
 {
-    public class PollingConsumer<T> where T: IAmAMessage
+    public class PollingConsumer<T> where T : IAmAMessage
     {
         private readonly IAmAHandler<T> _messageHandler;
         private readonly Func<string, T> _messageSerializer;
@@ -16,9 +16,29 @@ namespace SimpleMessaging
             _messageSerializer = messageSerializer;
             _hostName = hostName;
         }
-        
+
         public Task Run(CancellationToken ct)
         {
+            var task = Task.Factory.StartNew(() =>
+            {
+                ct.ThrowIfCancellationRequested();
+                using (var dataTypeChannelConsumer = new DataTypeChannelConsumer<T>(_messageSerializer, _hostName))
+                {
+
+
+                    while (true)
+                    {
+                        var message = dataTypeChannelConsumer.Receive();
+                        _messageHandler.Handle(message);
+                        Task.Delay(1000);
+                        ct.ThrowIfCancellationRequested();
+                    }
+                }
+            }, ct);
+
+
+
+            return task;
             /*
              * TODO:
              * Create a Task that will
