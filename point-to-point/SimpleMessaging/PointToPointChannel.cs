@@ -68,7 +68,7 @@ namespace SimpleMessaging
         public string Receive()
         {
             //TODO: Use basic get to read a message, don't auto acknowledge the message
-            var result = _channel.BasicGet(_queueName, autoAck: true);
+            var result = _channel.BasicGet(_queueName, autoAck: false);
             if (result != null)
                 return Encoding.UTF8.GetString(result.Body);
             else
